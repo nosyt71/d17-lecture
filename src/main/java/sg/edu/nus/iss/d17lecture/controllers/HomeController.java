@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonReader;
 import jakarta.json.JsonValue;
+import jakarta.servlet.http.HttpSession;
 import sg.edu.nus.iss.d17lecture.models.Country;
 import sg.edu.nus.iss.d17lecture.services.ProcessService;
 
@@ -29,15 +31,12 @@ public class HomeController {
 
     @GetMapping(path="/booksearch")
     public String bookSearchForm() {
-
         return "booksearch";
-
     }
 
     @GetMapping(path="/countries")
     public ResponseEntity<String> listCountry() {
         ResponseEntity<String> result = processSvc.getCountries();
-
         return result;
     }
 
@@ -49,7 +48,6 @@ public class HomeController {
 
         JsonReader jsonReader = Json.createReader(new StringReader(jsonString)); 
         JsonObject jsonObject = jsonReader.readObject();
-
         JsonObject jsonObjectData = jsonObject.getJsonObject("data");
 
         List<Country> countries = new ArrayList<Country>();
@@ -66,6 +64,39 @@ public class HomeController {
     public String countrySearchForm() {
 
         return "countrysearch";
+    }
+    
+        @GetMapping(path="/countrysearchregion")
+    public String countrySearchRegionForm(HttpSession session, Model model) {
+        ResponseEntity<String> result = processSvc.getCountries();
+
+        String JsonString = result.getBody().toString();
+
+        JsonReader jsonReader = Json.createReader(new StringReader(JsonString));
+        JsonObject jsonObject = jsonReader.readObject();
+        JsonObject jsonObjectData = jsonObject.getJsonObject("data");
+
+        List<String> regions = new ArrayList<String>();
+        Set<Entry<String, JsonValue>> entries = jsonObjectData.entrySet();
+        for (Entry<String, JsonValue> entry : entries) {
+            String regionValue = entry.getValue().asJsonObject().getString("region");
+            if (regions.size() ==0) {
+                regions.add(entry.getValue().asJsonObject().getString("region"));
+            } else { 
+                List<String> foundValue = regions.stream().filter(s -> s.equals(regionValue)).collect(Collectors.toList());
+
+                if (foundValue.size() > 0) {
+                    System.out.println("foundValue " + foundValue);
+                } else {
+                    regions.add(regionValue);
+                }
+            }
+        }
+
+        System.out.println(regions.toString());
+        model.addAttribute("regions", regions);
+
+        return "countrysearchregion";
     }
     
 }

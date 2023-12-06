@@ -33,4 +33,10 @@ public class ProcessController {
         ResponseEntity<String> results = processSvc.filterCountries(form.getFirst("searchName"));
         return results.getBody();
     }
+
+    @PostMapping(path="/searchCountryRegion")
+    public String processCountrySearchRegion(@RequestBody MultiValueMap<String,String> form) {
+        ResponseEntity<String> results = processSvc.filterCountriesByRegion(form.getFirst("regions"));
+        return results.getBody();
+    }
 }
